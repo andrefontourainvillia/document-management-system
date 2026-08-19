@@ -1,3 +1,5 @@
+const { createError } = require('../utils/createError');
+
 class DocumentController {
   constructor(documentService) {
     this.documentService = documentService;
@@ -6,7 +8,7 @@ class DocumentController {
   upload = async (request, response, next) => {
     try {
       if (!request.file) {
-        return next(this.error('FILE_REQUIRED', 'É necessário enviar um arquivo.', 400));
+        return next(createError('FILE_REQUIRED', 'É necessário enviar um arquivo.', 400));
       }
       response.status(201).json(await this.documentService.upload(request.file, request.userId));
     } catch (error) {
@@ -34,13 +36,6 @@ class DocumentController {
       next(error);
     }
   };
-
-  error(code, message, status) {
-    const error = new Error(message);
-    error.code = code;
-    error.status = status;
-    return error;
-  }
 }
 
 module.exports = { DocumentController };
