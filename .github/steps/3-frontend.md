@@ -34,9 +34,11 @@ Rode os dois servidores em terminais separados:
 
 ```bash
 cd backend && npm run dev
-cd frontend && npm run dev
 ```
 
+```bash
+cd frontend && npm run dev
+```
 Abra o frontend, envie um arquivo e confirme que ele aparece na lista e pode
 ser baixado.
 
