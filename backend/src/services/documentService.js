@@ -1,4 +1,5 @@
 const crypto = require('node:crypto');
+const { createError } = require('../utils/createError');
 
 class DocumentService {
   constructor({ metadataRepository, fileRepository }) {
@@ -6,9 +7,8 @@ class DocumentService {
     this.fileRepository = fileRepository;
   }
 
-  async upload(uploadedFile, owner) {
-    const id = crypto.randomUUID();
-    const metadata = {
+  buildMetadata(uploadedFile, owner, id) {
+    return {
       id,
       originalName: uploadedFile.originalname,
       storedName: uploadedFile.filename,
@@ -17,6 +17,11 @@ class DocumentService {
       uploadedAt: new Date().toISOString(),
       owner
     };
+  }
+
+  async upload(uploadedFile, owner) {
+    const id = crypto.randomUUID();
+    const metadata = this.buildMetadata(uploadedFile, owner, id);
 
     try {
       await this.fileRepository.save(uploadedFile);
@@ -39,26 +44,19 @@ class DocumentService {
   async getDownload(id, owner) {
     const document = this.metadataRepository.findById(id);
     if (!document) {
-      throw this.error('DOCUMENT_NOT_FOUND', 'Documento não encontrado.', 404);
+      throw createError('DOCUMENT_NOT_FOUND', 'Documento não encontrado.', 404);
     }
     if (document.owner !== owner) {
-      throw this.error('DOCUMENT_FORBIDDEN', 'Você não tem acesso a este documento.', 403);
+      throw createError('DOCUMENT_FORBIDDEN', 'Você não tem acesso a este documento.', 403);
     }
     if (!await this.fileRepository.exists(document.storedName)) {
-      throw this.error('DOCUMENT_NOT_FOUND', 'Documento não encontrado.', 404);
+      throw createError('DOCUMENT_NOT_FOUND', 'Documento não encontrado.', 404);
     }
     return { document, filePath: this.fileRepository.getPath(document.storedName) };
   }
 
   publicMetadata({ storedName, ...metadata }) {
     return metadata;
-  }
-
-  error(code, message, status) {
-    const error = new Error(message);
-    error.code = code;
-    error.status = status;
-    return error;
   }
 }
 
